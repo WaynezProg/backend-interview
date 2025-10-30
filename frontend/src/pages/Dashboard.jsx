@@ -73,6 +73,25 @@ const Dashboard = () => {
     }
   }
 
+  // 置頂/取消置頂貼文
+  const handlePinPost = async (postId) => {
+    try {
+      await postsAPI.pinPost(postId)
+      loadPosts()
+    } catch (err) {
+      setError('置頂貼文失敗')
+    }
+  }
+
+  const handleUnpinPost = async (postId) => {
+    try {
+      await postsAPI.unpinPost(postId)
+      loadPosts()
+    } catch (err) {
+      setError('取消置頂失敗')
+    }
+  }
+
   if (loading) {
     return (
       <div className="text-center">
@@ -152,7 +171,19 @@ const Dashboard = () => {
           {posts.map((post) => (
             <div key={post.id} className="card">
               <div className="d-flex justify-between align-center mb-2">
-                <h3>{post.author?.username || '未知使用者'}</h3>
+                <h3>
+                  {post.author?.username || '未知使用者'}
+                  {post.is_pinned && (
+                    <span style={{
+                      marginLeft: 8,
+                      background: '#ffc107',
+                      color: '#000',
+                      padding: '2px 6px',
+                      borderRadius: '3px',
+                      fontSize: '12px'
+                    }}>置頂</span>
+                  )}
+                </h3>
                 <small style={{ color: '#666' }}>
                   {new Date(post.created_at).toLocaleString('zh-TW')}
                 </small>
@@ -168,18 +199,33 @@ const Dashboard = () => {
                     className="btn btn-success"
                     onClick={() => handleLike(post.id)}
                   >
-                    👍 {post.likes?.length || 0}
+                    👍 {post.likes_count || 0}
                   </button>
                   <Link 
                     to={`/post/${post.id}`} 
                     className="btn btn-secondary"
                   >
-                    查看留言 ({post.comments?.length || 0})
+                    查看留言 ({post.comments_count || 0})
                   </Link>
                 </div>
 
                 {post.user_id === user?.id && (
                   <div className="d-flex gap-1">
+                    {post.is_pinned ? (
+                      <button 
+                        className="btn btn-secondary"
+                        onClick={() => handleUnpinPost(post.id)}
+                      >
+                        取消置頂
+                      </button>
+                    ) : (
+                      <button 
+                        className="btn btn-warning"
+                        onClick={() => handlePinPost(post.id)}
+                      >
+                        設為置頂
+                      </button>
+                    )}
                     <button 
                       className="btn btn-danger"
                       onClick={() => handleDeletePost(post.id)}

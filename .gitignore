@@ -282,6 +282,10 @@ backend/.venv/
 backend/.env
 summery/
 
+# Backend static build outputs (served frontend bundle)
+backend/static/
+!backend/static/.gitkeep
+
 # Frontend dependencies
 frontend/node_modules/
 frontend/.npm/
@@ -301,6 +305,7 @@ frontend/.cache/
 frontend/.parcel-cache/
 frontend/.vite/
 frontend/.rollup.cache/
+frontend/npm-cache/
 
 # Frontend environment files
 frontend/.env

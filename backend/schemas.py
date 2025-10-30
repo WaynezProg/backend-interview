@@ -44,6 +44,7 @@ class PostResponse(PostBase):
     id: int
     user_id: int
     author: UserResponse
+    is_pinned: bool = False
     created_at: datetime
     updated_at: Optional[datetime] = None
     likes_count: int = 0

@@ -49,6 +49,8 @@ export const postsAPI = {
   createPost: (postData) => api.post('/posts', postData),
   updatePost: (id, postData) => api.put(`/posts/${id}`, postData),
   deletePost: (id) => api.delete(`/posts/${id}`),
+  pinPost: (id) => api.put(`/posts/${id}/pin`),
+  unpinPost: (id) => api.put(`/posts/${id}/unpin`),
 }
 
 // 留言 API

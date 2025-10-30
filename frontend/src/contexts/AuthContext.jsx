@@ -32,12 +32,14 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login(credentials)
       const { access_token } = response.data
       
-      // 獲取用戶信息
+      // 先保存 token，確保後續請求帶上 Authorization 標頭
+      localStorage.setItem('token', access_token)
+
+      // 再獲取用戶信息
       const userResponse = await authAPI.getCurrentUser()
       const userData = userResponse.data
-      
-      // 保存到本地存儲
-      localStorage.setItem('token', access_token)
+
+      // 保存用戶資料
       localStorage.setItem('user', JSON.stringify(userData))
       
       setUser(userData)

@@ -103,6 +103,25 @@ const PostDetail = () => {
     }
   }
 
+  // 貼文置頂/取消置頂（僅貼文作者可用）
+  const handlePinPost = async () => {
+    try {
+      await postsAPI.pinPost(post.id)
+      await loadPost()
+    } catch (err) {
+      setError('置頂貼文失敗')
+    }
+  }
+
+  const handleUnpinPost = async () => {
+    try {
+      await postsAPI.unpinPost(post.id)
+      await loadPost()
+    } catch (err) {
+      setError('取消置頂失敗')
+    }
+  }
+
   // 設定置頂留言
   const handleSetTopComment = async (commentId) => {
     try {
@@ -164,10 +183,12 @@ const PostDetail = () => {
           >
             回覆
           </button>
-          {post?.user_id === user?.id && !comment.is_top_comment && (
+          {user?.id && !comment.is_top_comment && level === 0 && (
             <button 
               className="btn btn-warning"
               onClick={() => handleSetTopComment(comment.id)}
+              disabled={post?.user_id !== user?.id}
+              title={post?.user_id !== user?.id ? '僅貼文作者可設定置頂' : undefined}
             >
               設為置頂
             </button>
@@ -263,7 +284,19 @@ const PostDetail = () => {
       {/* 貼文內容 */}
       <div className="card mb-3">
         <div className="d-flex justify-between align-center mb-2">
-          <h2>{post.author?.username || '未知使用者'}</h2>
+          <h2>
+            {post.author?.username || '未知使用者'}
+            {post.is_pinned && (
+              <span style={{
+                marginLeft: 8,
+                background: '#ffc107',
+                color: '#000',
+                padding: '2px 6px',
+                borderRadius: '3px',
+                fontSize: '12px'
+              }}>置頂</span>
+            )}
+          </h2>
           <small style={{ color: '#666' }}>
             {new Date(post.created_at).toLocaleString('zh-TW')}
           </small>
@@ -280,6 +313,23 @@ const PostDetail = () => {
           >
             👍 {post?.likes_count || 0}
           </button>
+          {user?.id === post?.user_id && (
+            post.is_pinned ? (
+              <button 
+                className="btn btn-secondary"
+                onClick={handleUnpinPost}
+              >
+                取消置頂
+              </button>
+            ) : (
+              <button 
+                className="btn btn-warning"
+                onClick={handlePinPost}
+              >
+                設為置頂
+              </button>
+            )
+          )}
         </div>
       </div>
 

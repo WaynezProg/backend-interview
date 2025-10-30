@@ -35,6 +35,25 @@ def check_and_init_db():
         user_count = db.query(User).count()
         if user_count == 0:
             print("ℹ️  資料庫為空，建議執行: python init_db.py init")
+        # 檢查 posts.is_pinned 欄位是否存在，若不存在則新增（SQLite 專用）
+        try:
+            conn = engine.raw_connection()
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA table_info(posts);")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "is_pinned" not in columns:
+                print("🛠️  偵測到缺少 posts.is_pinned 欄位，正在新增...")
+                cursor.execute("ALTER TABLE posts ADD COLUMN is_pinned BOOLEAN DEFAULT 0;")
+                conn.commit()
+                print("✅ 已新增 posts.is_pinned 欄位")
+        except Exception as migrate_err:
+            print(f"⚠️  自動遷移 is_pinned 欄位失敗: {migrate_err}")
+        finally:
+            try:
+                cursor.close()
+                conn.close()
+            except Exception:
+                pass
     except Exception as e:
         print(f"⚠️  資料庫檢查失敗: {e}")
     finally:
@@ -173,7 +192,7 @@ async def get_posts(
     # 查詢貼文（排除黑名單使用者的貼文）
     posts = db.query(Post).filter(
         Post.user_id.notin_(blacklisted_users)
-    ).offset(skip).limit(limit).all()
+    ).order_by(Post.is_pinned.desc(), Post.created_at.desc()).offset(skip).limit(limit).all()
     
     # 為每個貼文添加按讚狀態和計數
     result = []
@@ -202,6 +221,7 @@ async def get_posts(
             "id": post.id,
             "user_id": post.user_id,
             "content": post.content,
+            "is_pinned": getattr(post, "is_pinned", False),
             "created_at": post.created_at,
             "updated_at": post.updated_at,
             "author": post.author,
@@ -263,6 +283,7 @@ async def get_post(
         "id": post.id,
         "user_id": post.user_id,
         "content": post.content,
+        "is_pinned": getattr(post, "is_pinned", False),
         "created_at": post.created_at,
         "updated_at": post.updated_at,
         "author": post.author,
@@ -300,6 +321,37 @@ async def update_post(
     db.refresh(post)
     
     return post
+
+# 置頂/取消置頂 API（僅作者可操作）
+@api_router.put("/posts/{post_id}/pin")
+async def pin_post(
+    post_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="貼文不存在")
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="無權限置頂此貼文")
+    post.is_pinned = True
+    db.commit()
+    return {"message": "貼文已置頂"}
+
+@api_router.put("/posts/{post_id}/unpin")
+async def unpin_post(
+    post_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    post = db.query(Post).filter(Post.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="貼文不存在")
+    if post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="無權限取消置頂此貼文")
+    post.is_pinned = False
+    db.commit()
+    return {"message": "貼文已取消置頂"}
 
 @api_router.delete("/posts/{post_id}")
 async def delete_post(
@@ -405,11 +457,11 @@ async def get_comments(
             detail="無權限查看此貼文留言"
         )
     
-    # 取得貼文的頂層留言
+    # 取得貼文的頂層留言（置頂優先，其次依建立時間）
     top_level_comments = db.query(Comment).filter(
         Comment.post_id == post_id,
         Comment.parent_id.is_(None)
-    ).all()
+    ).order_by(Comment.is_top_comment.desc(), Comment.created_at.asc()).all()
 
     def build_comment_tree(node: Comment) -> dict:
         """遞迴建立留言樹，包含 likes 資訊與所有子回覆。"""
@@ -668,6 +720,13 @@ async def set_top_comment(
             detail="留言不存在或不在該貼文中"
         )
     
+    # 僅允許頂層留言可置頂
+    if comment.parent_id is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="僅能對頂層留言進行置頂"
+        )
+
     # 先取消其他置頂留言
     db.query(Comment).filter(
         Comment.post_id == post_id,
