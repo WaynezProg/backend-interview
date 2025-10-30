@@ -48,6 +48,7 @@ class PostResponse(PostBase):
     updated_at: Optional[datetime] = None
     likes_count: int = 0
     comments_count: int = 0
+    is_liked: bool = False  # 當前用戶是否已按讚
     
     class Config:
         from_attributes = True

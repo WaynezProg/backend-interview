@@ -9,7 +9,7 @@ import uvicorn
 import os
 
 from database import get_db, engine, Base, SessionLocal
-from models import User, Post, Comment, Like, Blacklist
+from models import User, Post, Comment, Like, Blacklist, TargetType
 from schemas import (
     UserCreate, UserLogin, UserResponse, Token,
     PostCreate, PostUpdate, PostResponse,
@@ -175,7 +175,43 @@ async def get_posts(
         Post.user_id.notin_(blacklisted_users)
     ).offset(skip).limit(limit).all()
     
-    return posts
+    # 為每個貼文添加按讚狀態和計數
+    result = []
+    for post in posts:
+        # 計算按讚數量
+        likes_count = db.query(Like).filter(
+            Like.target_type == TargetType.POST,
+            Like.target_id == post.id
+        ).count()
+        
+        # 檢查當前用戶是否已按讚
+        is_liked = db.query(Like).filter(
+            Like.user_id == current_user.id,
+            Like.target_type == TargetType.POST,
+            Like.target_id == post.id
+        ).first() is not None
+        
+        # 計算留言數量
+        comments_count = db.query(Comment).filter(
+            Comment.post_id == post.id,
+            Comment.parent_id.is_(None)
+        ).count()
+        
+        # 創建響應對象
+        post_dict = {
+            "id": post.id,
+            "user_id": post.user_id,
+            "content": post.content,
+            "created_at": post.created_at,
+            "updated_at": post.updated_at,
+            "author": post.author,
+            "likes_count": likes_count,
+            "comments_count": comments_count,
+            "is_liked": is_liked
+        }
+        result.append(post_dict)
+    
+    return result
 
 @api_router.get("/posts/{post_id}", response_model=PostResponse)
 async def get_post(
@@ -405,6 +441,25 @@ async def create_like(
     db.refresh(db_like)
     
     return db_like
+
+@api_router.get("/likes", response_model=List[LikeResponse])
+async def get_likes(
+    target_type: TargetType = None,
+    target_id: int = None,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """取得按讚列表"""
+    query = db.query(Like)
+    
+    if target_type and target_id:
+        query = query.filter(
+            Like.target_type == target_type,
+            Like.target_id == target_id
+        )
+    
+    likes = query.all()
+    return likes
 
 @api_router.delete("/likes/{like_id}")
 async def delete_like(

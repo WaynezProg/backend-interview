@@ -590,8 +590,10 @@
                                 <p style="margin-bottom: 16px; white-space: pre-wrap;">${post.content}</p>
                                 <div class="d-flex justify-between align-center">
                                     <div class="d-flex gap-1">
-                                        <button class="btn btn-success" onclick="handleLike('post', ${post.id})">👍 ${post.likes?.length || 0}</button>
-                                        <a href="/post/${post.id}" class="btn btn-secondary">查看留言 (${post.comments?.length || 0})</a>
+                                        <button class="btn ${post.is_liked ? 'btn-warning' : 'btn-success'}" onclick="handleLike('post', ${post.id})">
+                                            👍 ${post.likes_count || 0} ${post.is_liked ? '(已按讚)' : ''}
+                                        </button>
+                                        <a href="/post/${post.id}" class="btn btn-secondary">查看留言 (${post.comments_count || 0})</a>
                                     </div>
                                     ${post.user_id === currentUser?.id ? `
                                         <button class="btn btn-danger" onclick="handleDeletePost(${post.id})">刪除</button>
@@ -661,19 +663,55 @@
             }
         }
 
-        // 處理按讚
+        // 處理按讚/取消按讚
         async function handleLike(targetType, targetId) {
             try {
-                const response = await apiCall('/likes', {
-                    method: 'POST',
-                    body: JSON.stringify({ target_type: targetType, target_id: targetId })
-                });
+                // 先檢查是否已經按讚
+                const postsResponse = await apiCall('/posts');
+                if (postsResponse && postsResponse.ok) {
+                    const posts = await postsResponse.json();
+                    const post = posts.find(p => p.id === targetId);
+                    
+                    if (post && post.is_liked) {
+                        // 已經按讚，需要取消按讚
+                        // 先獲取按讚記錄 ID
+                        const likesResponse = await apiCall(`/likes?target_type=${targetType}&target_id=${targetId}`);
+                        if (likesResponse && likesResponse.ok) {
+                            const likes = await likesResponse.json();
+                            const userLike = likes.find(like => like.user_id === currentUser?.id);
+                            
+                            if (userLike) {
+                                // 取消按讚
+                                const deleteResponse = await apiCall(`/likes/${userLike.id}`, {
+                                    method: 'DELETE'
+                                });
+                                
+                                if (deleteResponse && deleteResponse.ok) {
+                                    loadPosts();
+                                } else {
+                                    console.error('取消按讚失敗');
+                                }
+                            }
+                        }
+                    } else {
+                        // 未按讚，進行按讚
+                        const response = await apiCall('/likes', {
+                            method: 'POST',
+                            body: JSON.stringify({ target_type: targetType, target_id: targetId })
+                        });
 
-                if (response && response.ok) {
-                    loadPosts();
+                        if (response && response.ok) {
+                            loadPosts();
+                        } else if (response && response.status === 400) {
+                            // 已經按過讚，刷新頁面
+                            loadPosts();
+                        } else {
+                            console.error('按讚失敗');
+                        }
+                    }
                 }
             } catch (error) {
-                console.error('按讚失敗:', error);
+                console.error('按讚操作失敗:', error);
             }
         }
 
