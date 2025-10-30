@@ -1,9 +1,12 @@
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List
 import uvicorn
+import os
 
 from database import get_db, engine, Base, SessionLocal
 from models import User, Post, Comment, Like, Blacklist
@@ -56,10 +59,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 根路由
+# 靜態文件服務
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
+# 創建 API 子應用
+from fastapi import APIRouter
+api_router = APIRouter(prefix="/api")
+
+# 根路由 - 返回前端頁面
 @app.get("/")
 async def root():
+    static_file = os.path.join(static_dir, "index.html")
+    if os.path.exists(static_file):
+        return FileResponse(static_file)
     return {"message": "歡迎使用社群平台 API", "version": "1.0.0"}
+
+# 前端路由將在 API 路由定義之後添加
 
 # 健康檢查
 @app.get("/health")
@@ -67,7 +84,7 @@ async def health_check():
     return {"status": "healthy"}
 
 # 使用者相關 API
-@app.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@api_router.post("/auth/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     """使用者註冊"""
     # 檢查使用者名是否已存在
@@ -98,7 +115,7 @@ async def register_user(user: UserCreate, db: Session = Depends(get_db)):
     
     return db_user
 
-@app.post("/auth/login", response_model=Token)
+@api_router.post("/auth/login", response_model=Token)
 async def login_user(user_credentials: UserLogin, db: Session = Depends(get_db)):
     """使用者登入"""
     # 驗證使用者
@@ -116,13 +133,13 @@ async def login_user(user_credentials: UserLogin, db: Session = Depends(get_db))
     
     return {"access_token": access_token, "token_type": "bearer"}
 
-@app.get("/auth/me", response_model=UserResponse)
+@api_router.get("/auth/me", response_model=UserResponse)
 async def get_current_user_info(current_user: User = Depends(get_current_active_user)):
     """取得當前使用者資訊"""
     return current_user
 
 # 貼文相關 API
-@app.post("/posts", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
+@api_router.post("/posts", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
 async def create_post(
     post: PostCreate,
     current_user: User = Depends(get_current_active_user),
@@ -140,7 +157,7 @@ async def create_post(
     
     return db_post
 
-@app.get("/posts", response_model=List[PostResponse])
+@api_router.get("/posts", response_model=List[PostResponse])
 async def get_posts(
     skip: int = 0,
     limit: int = 10,
@@ -160,7 +177,7 @@ async def get_posts(
     
     return posts
 
-@app.get("/posts/{post_id}", response_model=PostResponse)
+@api_router.get("/posts/{post_id}", response_model=PostResponse)
 async def get_post(
     post_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -189,7 +206,7 @@ async def get_post(
     
     return post
 
-@app.put("/posts/{post_id}", response_model=PostResponse)
+@api_router.put("/posts/{post_id}", response_model=PostResponse)
 async def update_post(
     post_id: int,
     post_update: PostUpdate,
@@ -219,7 +236,7 @@ async def update_post(
     
     return post
 
-@app.delete("/posts/{post_id}")
+@api_router.delete("/posts/{post_id}")
 async def delete_post(
     post_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -246,7 +263,7 @@ async def delete_post(
     return {"message": "貼文已刪除"}
 
 # 留言相關 API
-@app.post("/posts/{post_id}/comments", response_model=CommentResponse, status_code=status.HTTP_201_CREATED)
+@api_router.post("/posts/{post_id}/comments", response_model=CommentResponse, status_code=status.HTTP_201_CREATED)
 async def create_comment(
     post_id: int,
     comment: CommentCreate,
@@ -296,7 +313,7 @@ async def create_comment(
     
     return db_comment
 
-@app.get("/posts/{post_id}/comments", response_model=List[CommentResponse])
+@api_router.get("/posts/{post_id}/comments", response_model=List[CommentResponse])
 async def get_comments(
     post_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -332,7 +349,7 @@ async def get_comments(
     return comments
 
 # 按讚相關 API
-@app.post("/likes", response_model=LikeResponse, status_code=status.HTTP_201_CREATED)
+@api_router.post("/likes", response_model=LikeResponse, status_code=status.HTTP_201_CREATED)
 async def create_like(
     like: LikeCreate,
     current_user: User = Depends(get_current_active_user),
@@ -389,7 +406,7 @@ async def create_like(
     
     return db_like
 
-@app.delete("/likes/{like_id}")
+@api_router.delete("/likes/{like_id}")
 async def delete_like(
     like_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -416,7 +433,7 @@ async def delete_like(
     return {"message": "已取消按讚"}
 
 # 黑名單相關 API
-@app.post("/blacklist", response_model=BlacklistResponse, status_code=status.HTTP_201_CREATED)
+@api_router.post("/blacklist", response_model=BlacklistResponse, status_code=status.HTTP_201_CREATED)
 async def add_to_blacklist(
     blacklist: BlacklistCreate,
     current_user: User = Depends(get_current_active_user),
@@ -461,7 +478,7 @@ async def add_to_blacklist(
     
     return db_blacklist
 
-@app.get("/blacklist", response_model=List[BlacklistResponse])
+@api_router.get("/blacklist", response_model=List[BlacklistResponse])
 async def get_blacklist(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
@@ -470,7 +487,7 @@ async def get_blacklist(
     blacklist = db.query(Blacklist).filter(Blacklist.user_id == current_user.id).all()
     return blacklist
 
-@app.delete("/blacklist/{blacklist_id}")
+@api_router.delete("/blacklist/{blacklist_id}")
 async def remove_from_blacklist(
     blacklist_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -497,7 +514,7 @@ async def remove_from_blacklist(
     return {"message": "已從黑名單移除"}
 
 # 置頂留言 API
-@app.put("/posts/{post_id}/comments/{comment_id}/top")
+@api_router.put("/posts/{post_id}/comments/{comment_id}/top")
 async def set_top_comment(
     post_id: int,
     comment_id: int,
@@ -542,6 +559,28 @@ async def set_top_comment(
     db.commit()
     
     return {"message": "置頂留言已設定"}
+
+# 將 API 路由包含到主應用中（在所有 API 路由定義之後）
+app.include_router(api_router)
+
+# 前端路由 - 支援 SPA 路由（必須在 API 路由之後）
+@app.get("/{path:path}")
+async def serve_frontend(path: str):
+    # 如果是 API 路由，讓 FastAPI 處理
+    if path.startswith("api/") or path.startswith("docs") or path.startswith("redoc") or path.startswith("openapi.json"):
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    # 檢查靜態文件
+    static_file = os.path.join(static_dir, path)
+    if os.path.exists(static_file) and os.path.isfile(static_file):
+        return FileResponse(static_file)
+    
+    # 對於前端路由，返回 index.html
+    index_file = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_file):
+        return FileResponse(index_file)
+    
+    raise HTTPException(status_code=404, detail="Not found")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

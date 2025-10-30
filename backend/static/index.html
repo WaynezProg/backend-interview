@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社群平台控制台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 16px 0;
+            margin-bottom: 20px;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #333;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .align-center {
+            align-items: center;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-0 { margin-bottom: 0; }
+        .mb-1 { margin-bottom: 8px; }
+        .mb-2 { margin-bottom: 16px; }
+        .mb-3 { margin-bottom: 24px; }
+
+        .gap-1 { gap: 8px; }
+        .gap-2 { gap: 16px; }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .navbar-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="/" class="navbar-brand">社群平台控制台</a>
+                <div class="navbar-nav">
+                    <a href="/" class="nav-link">首頁</a>
+                    <a href="/users" class="nav-link">使用者管理</a>
+                    <span id="user-info" class="nav-link"></span>
+                    <button id="logout-btn" class="btn btn-secondary hidden">登出</button>
+                    <a href="/login" id="login-link" class="nav-link">登入</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="content">
+            <!-- 內容將由 JavaScript 動態載入 -->
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let currentUser = null;
+        let authToken = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadContent();
+        });
+
+        // 檢查認證狀態
+        function checkAuth() {
+            authToken = localStorage.getItem('token');
+            currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+            
+            if (currentUser) {
+                document.getElementById('user-info').textContent = `歡迎，${currentUser.username}`;
+                document.getElementById('logout-btn').classList.remove('hidden');
+                document.getElementById('login-link').classList.add('hidden');
+            } else {
+                document.getElementById('user-info').textContent = '';
+                document.getElementById('logout-btn').classList.add('hidden');
+                document.getElementById('login-link').classList.remove('hidden');
+            }
+        }
+
+        // 登出
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            currentUser = null;
+            authToken = null;
+            checkAuth();
+            loadContent();
+        });
+
+        // 載入內容
+        function loadContent() {
+            const path = window.location.pathname;
+            const content = document.getElementById('content');
+            
+            if (!currentUser && path !== '/login' && path !== '/register') {
+                showLogin();
+                return;
+            }
+
+            switch(path) {
+                case '/':
+                    showDashboard();
+                    break;
+                case '/login':
+                    showLogin();
+                    break;
+                case '/register':
+                    showRegister();
+                    break;
+                case '/users':
+                    showUserManagement();
+                    break;
+                default:
+                    if (path.startsWith('/post/')) {
+                        // 重定向到專門的貼文詳情頁面
+                        window.location.href = `/post-detail.html?post=${path.split('/')[2]}`;
+                    } else {
+                        showDashboard();
+                    }
+            }
+        }
+
+        // 顯示登入頁面
+        function showLogin() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div style="max-width: 400px; margin: 50px auto;">
+                    <div class="card">
+                        <h2 class="text-center mb-3">登入</h2>
+                        <div id="login-error" class="error hidden"></div>
+                        <form id="login-form">
+                            <div class="form-group">
+                                <label class="form-label">使用者名稱</label>
+                                <input type="text" id="login-username" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">密碼</label>
+                                <input type="password" id="login-password" class="form-input" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">登入</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <p>還沒有帳號？ <a href="/register">立即註冊</a></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('login-form').addEventListener('submit', handleLogin);
+        }
+
+        // 顯示註冊頁面
+        function showRegister() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div style="max-width: 400px; margin: 50px auto;">
+                    <div class="card">
+                        <h2 class="text-center mb-3">註冊</h2>
+                        <div id="register-error" class="error hidden"></div>
+                        <form id="register-form">
+                            <div class="form-group">
+                                <label class="form-label">使用者名稱</label>
+                                <input type="text" id="register-username" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">電子郵件</label>
+                                <input type="email" id="register-email" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">密碼</label>
+                                <input type="password" id="register-password" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">確認密碼</label>
+                                <input type="password" id="register-confirm-password" class="form-input" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">註冊</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <p>已有帳號？ <a href="/login">立即登入</a></p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('register-form').addEventListener('submit', handleRegister);
+        }
+
+        // 顯示主控制台
+        function showDashboard() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div>
+                    <div class="d-flex justify-between align-center mb-3">
+                        <h1>貼文列表</h1>
+                        <button id="new-post-btn" class="btn btn-primary">發表新貼文</button>
+                    </div>
+                    <div id="posts-container">
+                        <div class="text-center">
+                            <p>載入中...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('new-post-btn').addEventListener('click', showNewPostForm);
+            loadPosts();
+        }
+
+        // 顯示新貼文表單
+        function showNewPostForm() {
+            const container = document.getElementById('posts-container');
+            const formHtml = `
+                <div class="card mb-3">
+                    <h3>發表新貼文</h3>
+                    <div id="post-error" class="error hidden"></div>
+                    <form id="new-post-form">
+                        <div class="form-group">
+                            <textarea id="post-content" class="form-textarea" placeholder="分享你的想法..." rows="3"></textarea>
+                        </div>
+                        <div class="d-flex gap-1">
+                            <button type="submit" class="btn btn-primary">發布</button>
+                            <button type="button" id="cancel-post" class="btn btn-secondary">取消</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            container.insertAdjacentHTML('afterbegin', formHtml);
+            
+            document.getElementById('new-post-form').addEventListener('submit', handleCreatePost);
+            document.getElementById('cancel-post').addEventListener('click', function() {
+                document.querySelector('.card').remove();
+            });
+        }
+
+        // 顯示使用者管理
+        function showUserManagement() {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div>
+                    <h1>使用者管理</h1>
+                    <p class="mb-3">管理你的黑名單，被加入黑名單的使用者將無法看到你的貼文或與你互動。</p>
+                    <div id="blacklist-error" class="error hidden"></div>
+                    
+                    <div class="card mb-3">
+                        <h3>加入黑名單</h3>
+                        <form id="blacklist-form">
+                            <div class="form-group">
+                                <label class="form-label">使用者 ID</label>
+                                <input type="number" id="block-user-id" class="form-input" placeholder="輸入要封鎖的使用者 ID" required>
+                                <small style="color: #666;">提示：你可以在貼文詳情頁面查看使用者 ID</small>
+                            </div>
+                            <button type="submit" class="btn btn-danger">加入黑名單</button>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <h3>黑名單列表</h3>
+                        <div id="blacklist-container">
+                            <div class="text-center">
+                                <p>載入中...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('blacklist-form').addEventListener('submit', handleAddToBlacklist);
+            loadBlacklist();
+        }
+
+        // API 調用函數
+        async function apiCall(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                }
+            };
+
+            // 確保 URL 以 /api 開頭
+            const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
+            const response = await fetch(apiUrl, { ...defaultOptions, ...options });
+            
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                currentUser = null;
+                authToken = null;
+                checkAuth();
+                loadContent();
+                return null;
+            }
+
+            return response;
+        }
+
+        // 處理登入
+        async function handleLogin(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const errorDiv = document.getElementById('login-error');
+
+            try {
+                const response = await apiCall('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.access_token;
+                    localStorage.setItem('token', authToken);
+
+                    // 獲取用戶信息
+                    const userResponse = await apiCall('/auth/me');
+                    if (userResponse.ok) {
+                        currentUser = await userResponse.json();
+                        localStorage.setItem('user', JSON.stringify(currentUser));
+                        checkAuth();
+                        loadContent();
+                    }
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = error.detail || '登入失敗';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = '登入失敗';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // 處理註冊
+        async function handleRegister(e) {
+            e.preventDefault();
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            const errorDiv = document.getElementById('register-error');
+
+            if (password !== confirmPassword) {
+                errorDiv.textContent = '密碼確認不一致';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await apiCall('/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                if (response.ok) {
+                    errorDiv.textContent = '註冊成功！請登入';
+                    errorDiv.classList.remove('error');
+                    errorDiv.classList.add('success');
+                    errorDiv.classList.remove('hidden');
+                    setTimeout(() => {
+                        window.location.href = '/login';
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = error.detail || '註冊失敗';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = '註冊失敗';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // 載入貼文列表
+        async function loadPosts() {
+            const container = document.getElementById('posts-container');
+            
+            try {
+                const response = await apiCall('/posts');
+                if (response && response.ok) {
+                    const posts = await response.json();
+                    if (posts.length === 0) {
+                        container.innerHTML = '<div class="card text-center"><p>還沒有貼文，快來發表第一篇吧！</p></div>';
+                    } else {
+                        container.innerHTML = posts.map(post => `
+                            <div class="card">
+                                <div class="d-flex justify-between align-center mb-2">
+                                    <h3>${post.author?.username || '未知使用者'}</h3>
+                                    <small style="color: #666;">${new Date(post.created_at).toLocaleString('zh-TW')}</small>
+                                </div>
+                                <p style="margin-bottom: 16px; white-space: pre-wrap;">${post.content}</p>
+                                <div class="d-flex justify-between align-center">
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-success" onclick="handleLike('post', ${post.id})">👍 ${post.likes?.length || 0}</button>
+                                        <a href="/post/${post.id}" class="btn btn-secondary">查看留言 (${post.comments?.length || 0})</a>
+                                    </div>
+                                    ${post.user_id === currentUser?.id ? `
+                                        <button class="btn btn-danger" onclick="handleDeletePost(${post.id})">刪除</button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="error">載入貼文失敗</div>';
+            }
+        }
+
+        // 載入黑名單
+        async function loadBlacklist() {
+            const container = document.getElementById('blacklist-container');
+            
+            try {
+                const response = await apiCall('/blacklist');
+                if (response && response.ok) {
+                    const blacklist = await response.json();
+                    if (blacklist.length === 0) {
+                        container.innerHTML = '<p style="color: #666;">黑名單是空的</p>';
+                    } else {
+                        container.innerHTML = blacklist.map(item => `
+                            <div class="card" style="margin-bottom: 12px;">
+                                <div class="d-flex justify-between align-center">
+                                    <div>
+                                        <h4>使用者 ID: ${item.blocked_user_id}</h4>
+                                        <small style="color: #666;">加入時間: ${new Date(item.created_at).toLocaleString('zh-TW')}</small>
+                                    </div>
+                                    <button class="btn btn-secondary" onclick="handleRemoveFromBlacklist(${item.id})">移除</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                container.innerHTML = '<div class="error">載入黑名單失敗</div>';
+            }
+        }
+
+        // 處理創建貼文
+        async function handleCreatePost(e) {
+            e.preventDefault();
+            const content = document.getElementById('post-content').value;
+            const errorDiv = document.getElementById('post-error');
+
+            try {
+                const response = await apiCall('/posts', {
+                    method: 'POST',
+                    body: JSON.stringify({ content })
+                });
+
+                if (response && response.ok) {
+                    document.querySelector('.card').remove();
+                    loadPosts();
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = error.detail || '創建貼文失敗';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = '創建貼文失敗';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // 處理按讚
+        async function handleLike(targetType, targetId) {
+            try {
+                const response = await apiCall('/likes', {
+                    method: 'POST',
+                    body: JSON.stringify({ target_type: targetType, target_id: targetId })
+                });
+
+                if (response && response.ok) {
+                    loadPosts();
+                }
+            } catch (error) {
+                console.error('按讚失敗:', error);
+            }
+        }
+
+        // 處理刪除貼文
+        async function handleDeletePost(postId) {
+            if (!confirm('確定要刪除此貼文嗎？')) return;
+
+            try {
+                const response = await apiCall(`/posts/${postId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response && response.ok) {
+                    loadPosts();
+                }
+            } catch (error) {
+                console.error('刪除貼文失敗:', error);
+            }
+        }
+
+        // 處理加入黑名單
+        async function handleAddToBlacklist(e) {
+            e.preventDefault();
+            const userId = document.getElementById('block-user-id').value;
+            const errorDiv = document.getElementById('blacklist-error');
+
+            try {
+                const response = await apiCall('/blacklist', {
+                    method: 'POST',
+                    body: JSON.stringify({ blocked_user_id: parseInt(userId) })
+                });
+
+                if (response && response.ok) {
+                    document.getElementById('block-user-id').value = '';
+                    loadBlacklist();
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = error.detail || '加入黑名單失敗';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = '加入黑名單失敗';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // 處理移除黑名單
+        async function handleRemoveFromBlacklist(blacklistId) {
+            if (!confirm('確定要從黑名單中移除此使用者嗎？')) return;
+
+            try {
+                const response = await apiCall(`/blacklist/${blacklistId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response && response.ok) {
+                    loadBlacklist();
+                }
+            } catch (error) {
+                console.error('移除黑名單失敗:', error);
+            }
+        }
+
+        // 路由處理
+        window.addEventListener('popstate', loadContent);
+        
+        // 攔截所有鏈接點擊
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A' && e.target.href.startsWith(window.location.origin)) {
+                e.preventDefault();
+                const path = new URL(e.target.href).pathname;
+                window.history.pushState({}, '', path);
+                loadContent();
+            }
+        });
+    </script>
+</body>
+</html>

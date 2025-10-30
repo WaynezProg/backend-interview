@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>貼文詳情 - 社群平台控制台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .navbar {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 16px 0;
+            margin-bottom: 20px;
+        }
+
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .navbar-nav {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .nav-link {
+            color: #333;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .nav-link:hover {
+            background-color: #f8f9fa;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #1e7e34;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .align-center {
+            align-items: center;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .mb-0 { margin-bottom: 0; }
+        .mb-1 { margin-bottom: 8px; }
+        .mb-2 { margin-bottom: 16px; }
+        .mb-3 { margin-bottom: 24px; }
+
+        .gap-1 { gap: 8px; }
+        .gap-2 { gap: 16px; }
+
+        .hidden {
+            display: none;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .comment {
+            margin-left: 20px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+        }
+
+        .comment-reply {
+            margin-left: 40px;
+            background: white;
+        }
+
+        .top-comment {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .top-badge {
+            background: #ffc107;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+            
+            .navbar-content {
+                flex-direction: column;
+                gap: 16px;
+            }
+            
+            .navbar-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .comment {
+                margin-left: 10px;
+            }
+            
+            .comment-reply {
+                margin-left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="/" class="navbar-brand">社群平台控制台</a>
+                <div class="navbar-nav">
+                    <a href="/" class="nav-link">首頁</a>
+                    <a href="/users" class="nav-link">使用者管理</a>
+                    <span id="user-info" class="nav-link"></span>
+                    <button id="logout-btn" class="btn btn-secondary hidden">登出</button>
+                    <a href="/login" id="login-link" class="nav-link">登入</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="content">
+            <div class="text-center">
+                <p>載入中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全域變數
+        let currentUser = null;
+        let authToken = null;
+        let postId = null;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadPostDetail();
+        });
+
+        // 檢查認證狀態
+        function checkAuth() {
+            authToken = localStorage.getItem('token');
+            currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+            
+            if (currentUser) {
+                document.getElementById('user-info').textContent = `歡迎，${currentUser.username}`;
+                document.getElementById('logout-btn').classList.remove('hidden');
+                document.getElementById('login-link').classList.add('hidden');
+            } else {
+                document.getElementById('user-info').textContent = '';
+                document.getElementById('logout-btn').classList.add('hidden');
+                document.getElementById('login-link').classList.remove('hidden');
+            }
+        }
+
+        // 登出
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            currentUser = null;
+            authToken = null;
+            checkAuth();
+            window.location.href = '/';
+        });
+
+        // 載入貼文詳情
+        async function loadPostDetail() {
+            // 從 URL 參數或路徑獲取貼文 ID
+            const urlParams = new URLSearchParams(window.location.search);
+            postId = urlParams.get('post') || window.location.pathname.split('/')[2];
+            const content = document.getElementById('content');
+            
+            if (!currentUser) {
+                content.innerHTML = `
+                    <div class="card">
+                        <p>請先登入</p>
+                        <a href="/login" class="btn btn-primary">登入</a>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                // 載入貼文
+                const postResponse = await apiCall(`/posts/${postId}`);
+                if (!postResponse || !postResponse.ok) {
+                    content.innerHTML = '<div class="error">貼文不存在或無權限查看</div>';
+                    return;
+                }
+                const post = await postResponse.json();
+
+                // 載入留言
+                const commentsResponse = await apiCall(`/posts/${postId}/comments`);
+                const comments = commentsResponse && commentsResponse.ok ? await commentsResponse.json() : [];
+
+                content.innerHTML = `
+                    <div class="d-flex justify-between align-center mb-3">
+                        <a href="/" class="btn btn-secondary">← 返回首頁</a>
+                        <h1>貼文詳情</h1>
+                    </div>
+
+                    <!-- 貼文內容 -->
+                    <div class="card mb-3">
+                        <div class="d-flex justify-between align-center mb-2">
+                            <h2>${post.author?.username || '未知使用者'}</h2>
+                            <small style="color: #666;">${new Date(post.created_at).toLocaleString('zh-TW')}</small>
+                        </div>
+                        <p style="margin-bottom: 16px; white-space: pre-wrap;">${post.content}</p>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-success" onclick="handleLike('post', ${post.id})">👍 ${post.likes?.length || 0}</button>
+                        </div>
+                    </div>
+
+                    <!-- 留言表單 -->
+                    <div class="card mb-3">
+                        <h3>發表留言</h3>
+                        <div id="comment-error" class="error hidden"></div>
+                        <form id="comment-form">
+                            <div class="form-group">
+                                <textarea id="comment-content" class="form-textarea" placeholder="分享你的想法..." rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">發布留言</button>
+                        </form>
+                    </div>
+
+                    <!-- 留言列表 -->
+                    <div class="card">
+                        <h3>留言 (${comments.length})</h3>
+                        <div id="comments-container">
+                            ${comments.length === 0 ? '<p style="color: #666;">還沒有留言，快來發表第一篇吧！</p>' : ''}
+                        </div>
+                    </div>
+                `;
+
+                // 渲染留言
+                renderComments(comments);
+
+                // 綁定事件
+                document.getElementById('comment-form').addEventListener('submit', handleCreateComment);
+
+            } catch (error) {
+                content.innerHTML = '<div class="error">載入貼文失敗</div>';
+            }
+        }
+
+        // 渲染留言
+        function renderComments(comments) {
+            const container = document.getElementById('comments-container');
+            if (comments.length === 0) {
+                container.innerHTML = '<p style="color: #666;">還沒有留言，快來發表第一篇吧！</p>';
+                return;
+            }
+
+            container.innerHTML = comments.map(comment => renderComment(comment)).join('');
+        }
+
+        // 渲染單個留言
+        function renderComment(comment, level = 0) {
+            const isReply = level > 0;
+            const isTop = comment.is_top_comment;
+            
+            return `
+                <div class="comment ${isReply ? 'comment-reply' : ''} ${isTop ? 'top-comment' : ''}" id="comment-${comment.id}">
+                    <div class="d-flex justify-between align-center mb-1">
+                        <strong>${comment.author?.username || '未知使用者'}</strong>
+                        <div class="d-flex gap-1">
+                            <small style="color: #666;">${new Date(comment.created_at).toLocaleString('zh-TW')}</small>
+                            ${isTop ? '<span class="top-badge">置頂</span>' : ''}
+                        </div>
+                    </div>
+                    <p style="margin-bottom: 8px; white-space: pre-wrap;">${comment.content}</p>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-success" onclick="handleLike('comment', ${comment.id})">👍 ${comment.likes?.length || 0}</button>
+                        <button class="btn btn-secondary" onclick="showReplyForm(${comment.id})">回覆</button>
+                        ${currentUser?.id === comment.post?.user_id && !isTop ? `
+                            <button class="btn btn-warning" onclick="handleSetTopComment(${comment.id})">設為置頂</button>
+                        ` : ''}
+                    </div>
+                    <div id="reply-form-${comment.id}" class="hidden" style="margin-top: 8px;">
+                        <form onsubmit="handleReply(event, ${comment.id})">
+                            <div class="form-group">
+                                <textarea class="form-textarea" placeholder="回覆留言..." rows="2" required></textarea>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <button type="submit" class="btn btn-primary">回覆</button>
+                                <button type="button" class="btn btn-secondary" onclick="hideReplyForm(${comment.id})">取消</button>
+                            </div>
+                        </form>
+                    </div>
+                    ${comment.replies && comment.replies.length > 0 ? 
+                        comment.replies.map(reply => renderComment(reply, level + 1)).join('') : ''}
+                </div>
+            `;
+        }
+
+        // API 調用函數
+        async function apiCall(url, options = {}) {
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                }
+            };
+
+            // 確保 URL 以 /api 開頭
+            const apiUrl = url.startsWith('/api') ? url : `/api${url}`;
+            const response = await fetch(apiUrl, { ...defaultOptions, ...options });
+            
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                currentUser = null;
+                authToken = null;
+                checkAuth();
+                window.location.href = '/login';
+                return null;
+            }
+
+            return response;
+        }
+
+        // 處理創建留言
+        async function handleCreateComment(e) {
+            e.preventDefault();
+            const content = document.getElementById('comment-content').value;
+            const errorDiv = document.getElementById('comment-error');
+
+            try {
+                const response = await apiCall(`/posts/${postId}/comments`, {
+                    method: 'POST',
+                    body: JSON.stringify({ content })
+                });
+
+                if (response && response.ok) {
+                    document.getElementById('comment-content').value = '';
+                    loadPostDetail(); // 重新載入
+                } else {
+                    const error = await response.json();
+                    errorDiv.textContent = error.detail || '創建留言失敗';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = '創建留言失敗';
+                errorDiv.classList.remove('hidden');
+            }
+        }
+
+        // 處理回覆
+        async function handleReply(e, parentId) {
+            e.preventDefault();
+            const content = e.target.querySelector('textarea').value;
+
+            try {
+                const response = await apiCall(`/posts/${postId}/comments`, {
+                    method: 'POST',
+                    body: JSON.stringify({ content, parent_id: parentId })
+                });
+
+                if (response && response.ok) {
+                    loadPostDetail(); // 重新載入
+                }
+            } catch (error) {
+                console.error('回覆失敗:', error);
+            }
+        }
+
+        // 處理按讚
+        async function handleLike(targetType, targetId) {
+            try {
+                const response = await apiCall('/likes', {
+                    method: 'POST',
+                    body: JSON.stringify({ target_type: targetType, target_id: targetId })
+                });
+
+                if (response && response.ok) {
+                    loadPostDetail(); // 重新載入
+                }
+            } catch (error) {
+                console.error('按讚失敗:', error);
+            }
+        }
+
+        // 處理設定置頂留言
+        async function handleSetTopComment(commentId) {
+            try {
+                const response = await apiCall(`/posts/${postId}/comments/${commentId}/top`, {
+                    method: 'PUT'
+                });
+
+                if (response && response.ok) {
+                    loadPostDetail(); // 重新載入
+                }
+            } catch (error) {
+                console.error('設定置頂留言失敗:', error);
+            }
+        }
+
+        // 顯示回覆表單
+        function showReplyForm(commentId) {
+            document.getElementById(`reply-form-${commentId}`).classList.remove('hidden');
+        }
+
+        // 隱藏回覆表單
+        function hideReplyForm(commentId) {
+            document.getElementById(`reply-form-${commentId}`).classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

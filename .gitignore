@@ -280,3 +280,73 @@ backend/env/
 backend/venv/
 backend/.venv/
 backend/.env
+summery/
+
+# Frontend dependencies
+frontend/node_modules/
+frontend/.npm/
+frontend/.yarn/
+frontend/.pnpm/
+
+# Frontend build outputs
+frontend/dist/
+frontend/build/
+frontend/.next/
+frontend/.nuxt/
+frontend/.output/
+frontend/.vuepress/dist/
+
+# Frontend cache
+frontend/.cache/
+frontend/.parcel-cache/
+frontend/.vite/
+frontend/.rollup.cache/
+
+# Frontend environment files
+frontend/.env
+frontend/.env.local
+frontend/.env.development
+frontend/.env.production
+frontend/.env.test
+
+# Frontend logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/lerna-debug.log*
+frontend/.pnpm-debug.log*
+
+# Frontend coverage
+frontend/coverage/
+frontend/.nyc_output/
+
+# Frontend IDE
+frontend/.vscode/
+frontend/.idea/
+
+# Frontend OS
+frontend/.DS_Store
+frontend/Thumbs.db
+
+# Frontend temporary files
+frontend/*.tmp
+frontend/*.temp
+frontend/.temp/
+frontend/.tmp/
+
+# Frontend package manager lock files (可選，根據團隊偏好決定是否忽略)
+# frontend/package-lock.json
+# frontend/yarn.lock
+# frontend/pnpm-lock.yaml
+
+# Frontend test results
+frontend/test-results/
+frontend/playwright-report/
+frontend/playwright/.cache/
+
+# Frontend storybook
+frontend/storybook-static/
+
+# Frontend documentation
+frontend/docs/.vitepress/cache/
+frontend/docs/.vitepress/dist/

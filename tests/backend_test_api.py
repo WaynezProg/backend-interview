@@ -25,7 +25,7 @@ def test_api():
         "email": "test2@example.com",
         "password": "password123"
     }
-    response = requests.post(f"{BASE_URL}/auth/register", json=user_data)
+    response = requests.post(f"{BASE_URL}/api/auth/register", json=user_data)
     print(f"狀態碼: {response.status_code}")
     if response.status_code == 201:
         print("✅ 使用者註冊成功")
@@ -41,7 +41,7 @@ def test_api():
         "username": "testuser2",
         "password": "password123"
     }
-    response = requests.post(f"{BASE_URL}/auth/login", json=login_data)
+    response = requests.post(f"{BASE_URL}/api/auth/login", json=login_data)
     print(f"狀態碼: {response.status_code}")
     if response.status_code == 200:
         print("✅ 登入成功")
@@ -60,7 +60,7 @@ def test_api():
     post_data = {
         "content": "這是我的第一篇貼文！歡迎大家來互動～"
     }
-    response = requests.post(f"{BASE_URL}/posts", json=post_data, headers=headers)
+    response = requests.post(f"{BASE_URL}/api/posts", json=post_data, headers=headers)
     print(f"狀態碼: {response.status_code}")
     if response.status_code == 201:
         print("✅ 貼文建立成功")
@@ -73,7 +73,7 @@ def test_api():
     
     # 5. 取得貼文列表
     print("\n5. 取得貼文列表...")
-    response = requests.get(f"{BASE_URL}/posts", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/posts", headers=headers)
     print(f"狀態碼: {response.status_code}")
     if response.status_code == 200:
         print("✅ 取得貼文列表成功")
@@ -87,7 +87,7 @@ def test_api():
     comment_data = {
         "content": "這篇貼文很棒！"
     }
-    response = requests.post(f"{BASE_URL}/posts/{post_id}/comments", json=comment_data, headers=headers)
+    response = requests.post(f"{BASE_URL}/api/posts/{post_id}/comments", json=comment_data, headers=headers)
     print(f"狀態碼: {response.status_code}")
     if response.status_code == 201:
         print("✅ 留言建立成功")
@@ -103,7 +103,7 @@ def test_api():
         "target_type": "post",
         "target_id": post_id
     }
-    response = requests.post(f"{BASE_URL}/likes", json=like_data, headers=headers)
+    response = requests.post(f"{BASE_URL}/api/likes", json=like_data, headers=headers)
     print(f"狀態碼: {response.status_code}")
     if response.status_code == 201:
         print("✅ 按讚成功")
@@ -112,7 +112,7 @@ def test_api():
     
     # 8. 取得使用者資訊
     print("\n8. 取得使用者資訊...")
-    response = requests.get(f"{BASE_URL}/auth/me", headers=headers)
+    response = requests.get(f"{BASE_URL}/api/auth/me", headers=headers)
     print(f"狀態碼: {response.status_code}")
     if response.status_code == 200:
         print("✅ 取得使用者資訊成功")
