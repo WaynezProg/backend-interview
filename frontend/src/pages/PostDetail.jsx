@@ -65,17 +65,41 @@ const PostDetail = () => {
     }
   }
 
-  // 按讚功能
+  // 按讚/取消按讚功能（針對貼文與留言分支）
   const handleLike = async (targetType, targetId) => {
     try {
-      await likesAPI.createLike({
-        target_type: targetType,
-        target_id: targetId
-      })
-      loadPost()
-      loadComments()
+      if (targetType === 'post') {
+        // 使用當前貼文狀態決定按讚/取消
+        const likesResponse = await likesAPI.getLikes('post', targetId)
+        const likes = likesResponse.data
+        const userLike = likes.find(like => like.user_id === user?.id)
+
+        if (post?.is_liked && userLike) {
+          await likesAPI.deleteLike(userLike.id)
+        } else {
+          await likesAPI.createLike({ target_type: 'post', target_id: targetId })
+        }
+
+        await loadPost()
+      } else {
+        // comment 分支
+        const commentsRes = await commentsAPI.getComments(id)
+        const comment = commentsRes.data.find(c => c.id === targetId)
+
+        const likesResponse = await likesAPI.getLikes('comment', targetId)
+        const likes = likesResponse.data
+        const userLike = likes.find(like => like.user_id === user?.id)
+
+        if (comment?.is_liked && userLike) {
+          await likesAPI.deleteLike(userLike.id)
+        } else {
+          await likesAPI.createLike({ target_type: 'comment', target_id: targetId })
+        }
+
+        await loadComments()
+      }
     } catch (err) {
-      console.error('按讚失敗:', err)
+      console.error('按讚操作失敗:', err)
     }
   }
 
@@ -129,10 +153,10 @@ const PostDetail = () => {
 
         <div className="d-flex gap-1">
           <button 
-            className="btn btn-success"
+            className={`btn ${comment.is_liked ? 'btn-warning' : 'btn-success'}`}
             onClick={() => handleLike('comment', comment.id)}
           >
-            👍 {comment.likes?.length || 0}
+            👍 {comment.likes_count || 0}
           </button>
           <button 
             className="btn btn-secondary"
@@ -251,10 +275,10 @@ const PostDetail = () => {
 
         <div className="d-flex gap-1">
           <button 
-            className="btn btn-success"
+            className={`btn ${post?.is_liked ? 'btn-warning' : 'btn-success'}`}
             onClick={() => handleLike('post', post.id)}
           >
-            👍 {post.likes?.length || 0}
+            👍 {post?.likes_count || 0}
           </button>
         </div>
       </div>

@@ -62,6 +62,7 @@ export const commentsAPI = {
 export const likesAPI = {
   createLike: (likeData) => api.post('/likes', likeData),
   deleteLike: (likeId) => api.delete(`/likes/${likeId}`),
+  getLikes: (targetType, targetId) => api.get(`/likes?target_type=${targetType}&target_id=${targetId}`),
 }
 
 // 黑名單 API

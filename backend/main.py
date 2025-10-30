@@ -219,28 +219,57 @@ async def get_post(
     current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
-    """取得單一貼文"""
+    """取得單一貼文（包含 likes_count / comments_count / is_liked）"""
     post = db.query(Post).filter(Post.id == post_id).first()
-    
+
     if not post:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="貼文不存在"
         )
-    
+
     # 檢查是否在黑名單中
     blacklist = db.query(Blacklist).filter(
         Blacklist.user_id == current_user.id,
         Blacklist.blocked_user_id == post.user_id
     ).first()
-    
+
     if blacklist:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="無權限查看此貼文"
         )
-    
-    return post
+
+    # 計算貼文按讚數量
+    likes_count = db.query(Like).filter(
+        Like.target_type == TargetType.POST,
+        Like.target_id == post.id
+    ).count()
+
+    # 檢查當前用戶是否已按讚
+    is_liked = db.query(Like).filter(
+        Like.user_id == current_user.id,
+        Like.target_type == TargetType.POST,
+        Like.target_id == post.id
+    ).first() is not None
+
+    # 計算留言數量（僅頂層留言數）
+    comments_count = db.query(Comment).filter(
+        Comment.post_id == post.id,
+        Comment.parent_id.is_(None)
+    ).count()
+
+    return {
+        "id": post.id,
+        "user_id": post.user_id,
+        "content": post.content,
+        "created_at": post.created_at,
+        "updated_at": post.updated_at,
+        "author": post.author,
+        "likes_count": likes_count,
+        "comments_count": comments_count,
+        "is_liked": is_liked,
+    }
 
 @api_router.put("/posts/{post_id}", response_model=PostResponse)
 async def update_post(
@@ -376,13 +405,49 @@ async def get_comments(
             detail="無權限查看此貼文留言"
         )
     
-    # 取得留言（只取得頂層留言，巢狀留言會透過關聯自動載入）
-    comments = db.query(Comment).filter(
+    # 取得貼文的頂層留言
+    top_level_comments = db.query(Comment).filter(
         Comment.post_id == post_id,
         Comment.parent_id.is_(None)
     ).all()
-    
-    return comments
+
+    def build_comment_tree(node: Comment) -> dict:
+        """遞迴建立留言樹，包含 likes 資訊與所有子回覆。"""
+        likes_count = db.query(Like).filter(
+            Like.target_type == TargetType.COMMENT,
+            Like.target_id == node.id
+        ).count()
+
+        is_liked = db.query(Like).filter(
+            Like.user_id == current_user.id,
+            Like.target_type == TargetType.COMMENT,
+            Like.target_id == node.id
+        ).first() is not None
+
+        # 查詢子回覆
+        child_comments = db.query(Comment).filter(
+            Comment.post_id == node.post_id,
+            Comment.parent_id == node.id
+        ).all()
+
+        return {
+            "id": node.id,
+            "post_id": node.post_id,
+            "user_id": node.user_id,
+            "parent_id": node.parent_id,
+            "content": node.content,
+            "is_top_comment": node.is_top_comment,
+            "created_at": node.created_at,
+            "updated_at": node.updated_at,
+            "author": node.author,
+            "likes_count": likes_count,
+            "is_liked": is_liked,
+            "replies": [build_comment_tree(child) for child in child_comments]
+        }
+
+    # 建立整棵留言樹
+    result = [build_comment_tree(c) for c in top_level_comments]
+    return result
 
 # 按讚相關 API
 @api_router.post("/likes", response_model=LikeResponse, status_code=status.HTTP_201_CREATED)

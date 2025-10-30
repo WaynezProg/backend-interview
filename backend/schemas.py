@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, Field
 from pydantic import EmailStr
 from typing import Optional, List
 from datetime import datetime
@@ -73,7 +73,8 @@ class CommentResponse(CommentBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     likes_count: int = 0
-    replies: List['CommentResponse'] = []
+    is_liked: bool = False  # 當前用戶是否已按讚
+    replies: List['CommentResponse'] = Field(default_factory=list)
     
     class Config:
         from_attributes = True
@@ -82,6 +83,16 @@ class CommentResponse(CommentBase):
 class LikeCreate(BaseModel):
     target_type: TargetType
     target_id: int
+    
+    @field_validator('target_type', mode='before')
+    @classmethod
+    def validate_target_type(cls, v):
+        if isinstance(v, str):
+            if v == 'post':
+                return TargetType.POST
+            elif v == 'comment':
+                return TargetType.COMMENT
+        return v
 
 class LikeResponse(BaseModel):
     id: int
