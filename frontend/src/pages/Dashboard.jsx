@@ -48,16 +48,35 @@ const Dashboard = () => {
     }
   }
 
-  // 按讚功能
+  // 按讚/取消按讚功能
   const handleLike = async (postId) => {
     try {
-      await likesAPI.createLike({
-        target_type: 'post',
-        target_id: postId
-      })
+      // 找到對應的貼文
+      const post = posts.find(p => p.id === postId)
+      if (!post) return
+
+      // 檢查是否已按讚
+      if (post.is_liked) {
+        // 已按讚，需要取消按讚
+        const likesResponse = await likesAPI.getLikes('post', postId)
+        const likes = likesResponse.data
+        const userLike = likes.find(like => like.user_id === user?.id)
+        
+        if (userLike) {
+          await likesAPI.deleteLike(userLike.id)
+        }
+      } else {
+        // 未按讚，新增按讚
+        await likesAPI.createLike({
+          target_type: 'post',
+          target_id: postId
+        })
+      }
+      
       loadPosts() // 重新載入以更新按讚數
     } catch (err) {
-      console.error('按讚失敗:', err)
+      console.error('按讚操作失敗:', err)
+      setError('按讚操作失敗')
     }
   }
 
@@ -196,7 +215,7 @@ const Dashboard = () => {
               <div className="d-flex justify-between align-center">
                 <div className="d-flex gap-1">
                   <button 
-                    className="btn btn-success"
+                    className={`btn ${post.is_liked ? 'btn-warning' : 'btn-success'}`}
                     onClick={() => handleLike(post.id)}
                   >
                     👍 {post.likes_count || 0}

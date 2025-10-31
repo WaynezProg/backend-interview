@@ -82,15 +82,13 @@ const PostDetail = () => {
 
         await loadPost()
       } else {
-        // comment 分支
-        const commentsRes = await commentsAPI.getComments(id)
-        const comment = commentsRes.data.find(c => c.id === targetId)
-
+        // comment 分支（包含巢狀回覆）
         const likesResponse = await likesAPI.getLikes('comment', targetId)
         const likes = likesResponse.data
         const userLike = likes.find(like => like.user_id === user?.id)
 
-        if (comment?.is_liked && userLike) {
+        // 如果已有按讚記錄，則取消按讚；否則新增按讚
+        if (userLike) {
           await likesAPI.deleteLike(userLike.id)
         } else {
           await likesAPI.createLike({ target_type: 'comment', target_id: targetId })
