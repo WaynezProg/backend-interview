@@ -416,6 +416,18 @@ async def create_comment(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="父留言不存在或不在同一貼文"
             )
+        
+        # 檢查父留言作者是否在黑名單中
+        parent_blacklist = db.query(Blacklist).filter(
+            Blacklist.user_id == current_user.id,
+            Blacklist.blocked_user_id == parent_comment.user_id
+        ).first()
+        
+        if parent_blacklist:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="無權限對此留言進行回覆"
+            )
     
     db_comment = Comment(
         post_id=post_id,
